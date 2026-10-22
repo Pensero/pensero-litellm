@@ -9,6 +9,29 @@ No source code, prompt or file path leaves the proxy. The edit events hold only 
 
 ## Install
 
+### One command
+
+On the machine that runs the LiteLLM proxy:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Pensero/pensero-litellm/main/install.sh | sh
+```
+
+The script asks for the OTel endpoint (Pensero is the default) and the token or headers. Then it finds the proxy:
+
+| The proxy runs in | The script |
+| --- | --- |
+| Docker Compose | Builds a local image from the proxy image plus this package, so the LiteLLM version stays the same. Sets the image and the OTel variables of the service (the values go in `.env`), adds the callback to `config.yaml` and restarts the service. |
+| Docker, started with `docker run` | Builds the same image and adds the callback to `config.yaml`. It cannot restart the container with the same options, so it shows the image and the `-e` options to use. |
+| A Python environment (pip) | Installs the package in the Python of the `litellm` command, adds the callback to `config.yaml`, and shows the variables to set before you restart LiteLLM. |
+| Nothing | Creates a new proxy in `./litellm-proxy` (Docker Compose, Anthropic or OpenAI models) and starts it. |
+
+It shows the changes and asks before it writes files or restarts a service. It saves a `.bak` copy of each file
+that it edits. Options such as `--endpoint`, `--token`, `--headers` and `--yes` let it run without questions
+(`curl ... | sh -s -- --help`). Kubernetes and Helm: use the manual steps below.
+
+### Manual
+
 Add the package to your LiteLLM proxy image:
 
 ```sh

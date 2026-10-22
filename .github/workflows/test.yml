@@ -17,3 +17,4 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv run --resolution ${{ matrix.resolution }} pytest -v
       - run: uv run ruff check . && uv run ruff format --check .
+      - run: shellcheck install.sh
