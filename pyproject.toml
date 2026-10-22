@@ -1,0 +1,38 @@
+[project]
+name = "pensero-litellm"
+version = "0.1.0"
+description = "LiteLLM callback that sends tokens, cost, models and edited lines as OpenTelemetry log events"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Pensero" }]
+keywords = ["litellm", "opentelemetry", "otel", "ai", "claude-code", "codex"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Monitoring",
+]
+dependencies = [
+    "litellm>=1.75",
+    "opentelemetry-sdk>=1.39",
+    "opentelemetry-exporter-otlp-proto-http>=1.39",
+]
+
+[project.urls]
+Homepage = "https://github.com/Pensero/pensero-litellm"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
