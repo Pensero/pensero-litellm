@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: System :: Monitoring",
 ]
 dependencies = [
-    "litellm>=1.70",
+    "litellm>=1.75",
     "opentelemetry-sdk>=1.39",
     "opentelemetry-exporter-otlp-proto-http>=1.39",
 ]
@@ -22,7 +22,7 @@ dependencies = [
 Homepage = "https://github.com/Pensero/pensero-litellm"
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.6"]
 
 [build-system]
 requires = ["hatchling>=1.26"]
