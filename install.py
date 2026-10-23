@@ -29,10 +29,13 @@ from ruamel.yaml import YAML
 CALLBACK = "pensero_litellm.handler"
 PACKAGE = os.environ.get("PENSERO_LITELLM_PACKAGE", "pensero-litellm")
 PENSERO_ENDPOINT = "https://app.pensero.ai/otel"
-NEW_PROXY_IMAGE = "ghcr.io/berriai/litellm:main-stable"
+# A fixed version and digest: the moving tags (main-stable, latest) served the compromised v1.107.0 on 2026-10-21.
+NEW_PROXY_IMAGE = (
+    "ghcr.io/berriai/litellm:v1.106.2@sha256:7294b90f868c5c38c99b83021c7ba46f9b439e95f8e32964c925c7d2563a03f7"
+)
 # The LiteLLM image has no pip, so the build copies in uv and installs into the image's own Python.
 DOCKERFILE = """FROM {base}
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /usr/local/bin/uv
 RUN uv pip install --no-cache --python "$(command -v python)" "{package}"
 """
 

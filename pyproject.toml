@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: System :: Monitoring",
 ]
 dependencies = [
-    "litellm>=1.75",
+    "litellm>=1.75,!=1.107.0",
     "opentelemetry-sdk>=1.39",
     "opentelemetry-exporter-otlp-proto-http>=1.39",
 ]
