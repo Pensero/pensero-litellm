@@ -14,7 +14,7 @@ from opentelemetry.sdk.resources import Resource
 
 from pensero_litellm import __version__
 from pensero_litellm.edits import count_edits
-from pensero_litellm.exporter import LogExporter, make_exporter
+from pensero_litellm.exporter import LogExporter, make_exporters
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,8 @@ class OTelLogger(CustomLogger):
         if self._logger is None:
             resource = Resource.create({"service.name": os.environ.get("OTEL_SERVICE_NAME") or "litellm"})
             provider = LoggerProvider(resource=resource)
-            provider.add_log_record_processor(BatchLogRecordProcessor(self._exporter or make_exporter()))
+            for exporter in [self._exporter] if self._exporter else make_exporters():
+                provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
             self._provider = provider
             self._logger = provider.get_logger("pensero_litellm", __version__)
         return self._logger

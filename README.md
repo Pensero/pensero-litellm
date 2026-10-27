@@ -27,7 +27,8 @@ The script asks for the OTel endpoint (Pensero is the default) and the token or 
 | Nothing | Creates a new proxy in `./litellm-proxy` (Docker Compose, Anthropic or OpenAI models) and starts it. |
 
 It shows the changes and asks before it writes files or restarts a service. It saves a `.bak` copy of each file
-that it edits. Options such as `--endpoint`, `--token`, `--headers` and `--yes` let it run without questions
+that it edits. `--debug` sets `OTEL_LOGS_EXPORTER=console` (see [Debug](#debug)); run the script again without it
+to send. Options such as `--endpoint`, `--token`, `--headers` and `--yes` let it run without questions
 (`curl ... | sh -s -- --help`). Kubernetes and Helm: use the manual steps below.
 
 ### Manual
@@ -64,8 +65,15 @@ warning and the requests do not fail or wait.
 | `OTEL_EXPORTER_OTLP_ENDPOINT` (`/v1/logs` is added) or `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` (used as is) | `http://localhost:4318` |
 | `OTEL_EXPORTER_OTLP_HEADERS` or `OTEL_EXPORTER_OTLP_LOGS_HEADERS` | none |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` or `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` | `http/protobuf` |
+| `OTEL_LOGS_EXPORTER`: `otlp`, `console`, `console,otlp` or `none` | `otlp` |
 | `OTEL_SERVICE_NAME` | `litellm` |
 | `OTEL_BLRP_SCHEDULE_DELAY` (batch interval, ms) | `1000` |
+
+### Debug
+
+Set `OTEL_LOGS_EXPORTER=console` and restart the proxy. The callback then prints each event as JSON in the
+proxy log (stdout) and sends nothing. `console,otlp` prints and sends. These are the same events that it
+sends, so you can also check that they hold no code and no file path.
 
 ## Events
 

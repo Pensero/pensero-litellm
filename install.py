@@ -126,6 +126,12 @@ def set_env_file(path: Path, values: dict[str, str]) -> None:
 
 
 def otel_settings(args) -> dict[str, str]:
+    if args.debug:
+        return {"OTEL_LOGS_EXPORTER": "console"}
+    return {**endpoint_settings(args), "OTEL_LOGS_EXPORTER": "otlp"}
+
+
+def endpoint_settings(args) -> dict[str, str]:
     endpoint = args.endpoint or ask("OTel endpoint", PENSERO_ENDPOINT)
     if endpoint.rstrip("/") == PENSERO_ENDPOINT:
         token = args.token or ask("Pensero OTel token (Settings > AI tools)", secret=True)
@@ -304,6 +310,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--port", default="4000", help="port for a new proxy")
     parser.add_argument("--provider", choices=["anthropic", "openai"], help="model provider for a new proxy")
     parser.add_argument("--yes", action="store_true", help="do not ask before changes")
+    parser.add_argument("--debug", action="store_true", help="print the events in the proxy log and send nothing")
     args = parser.parse_args(argv)
 
     container = litellm_container()

@@ -7,7 +7,7 @@ import pytest
 from opentelemetry.sdk._logs.export import InMemoryLogRecordExporter
 
 from pensero_litellm import OTelLogger
-from pensero_litellm.exporter import JsonLogExporter
+from pensero_litellm.exporter import JsonLogExporter, make_exporters
 
 EDIT_REQUEST = [
     {"role": "user", "content": "edit"},
@@ -109,6 +109,39 @@ def test_emit_never_raises_into_litellm(caplog):
 
     asyncio.run(Broken().async_log_success_event({"standard_logging_object": {"id": "x"}}, None, None, None))
     assert "could not send" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("value", "kinds"),
+    [
+        (None, ["OTLPLogExporter"]),
+        ("console", ["Console"]),
+        ("console, otlp", ["Console", "OTLPLogExporter"]),
+        ("none", []),
+    ],
+)
+def test_otel_logs_exporter_selects_the_exporters(monkeypatch, value, kinds):
+    if value is None:
+        monkeypatch.delenv("OTEL_LOGS_EXPORTER", raising=False)
+    else:
+        monkeypatch.setenv("OTEL_LOGS_EXPORTER", value)
+
+    names = [type(e).__name__ for e in make_exporters()]
+
+    assert [next(k for k in kinds if k in n) for n in names] == kinds
+
+
+def test_console_prints_the_events_and_sends_nothing(monkeypatch, capfd):
+    monkeypatch.setenv("OTEL_LOGS_EXPORTER", "console")
+    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:9")
+
+    handler = OTelLogger()
+    handler.emit({"id": "r1", "model": "gpt-5", "prompt_tokens": 10, "completion_tokens": 5, "messages": EDIT_REQUEST})
+    handler.force_flush()
+
+    out = capfd.readouterr().out
+    assert "ai_gateway.request" in out and "ai_gateway.file_edit" in out
+    assert "secret/a.py" not in out
 
 
 def test_json_exporter_posts_otlp_json(monkeypatch):
