@@ -1,13 +1,16 @@
-"""Pick the OTLP/HTTP log exporter from the standard OpenTelemetry environment variables.
+"""Pick the log exporters from the standard OpenTelemetry environment variables.
 
-`http/protobuf` (the default) uses the exporter of the OpenTelemetry SDK. The SDK has no JSON exporter,
-so `http/json` uses `JsonLogExporter`, which sends the same request encoded as OTLP JSON.
+`OTEL_LOGS_EXPORTER` selects them: `otlp` (the default), `console` (print each event on stdout and send
+nothing), both (`console,otlp`), or `none`. For `otlp`, `http/protobuf` (the default) uses the exporter of
+the OpenTelemetry SDK. The SDK has no JSON exporter, so `http/json` uses `JsonLogExporter`, which sends the
+same request encoded as OTLP JSON.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import sys
 from collections.abc import Sequence
 
 import requests
@@ -17,8 +20,10 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry.sdk._logs.export import LogExportResult
 
 try:
+    from opentelemetry.sdk._logs.export import ConsoleLogRecordExporter as ConsoleExporter
     from opentelemetry.sdk._logs.export import LogRecordExporter as LogExporter
 except ImportError:
+    from opentelemetry.sdk._logs.export import ConsoleLogExporter as ConsoleExporter
     from opentelemetry.sdk._logs.export import LogExporter
 from opentelemetry.util.re import parse_env_headers
 
@@ -71,7 +76,13 @@ class JsonLogExporter(LogExporter):
         return True
 
 
-def make_exporter() -> LogExporter:
-    if _env("PROTOCOL") == "http/json":
-        return JsonLogExporter()
-    return OTLPLogExporter()
+def make_exporters() -> list[LogExporter]:
+    names = {name.strip() for name in (os.environ.get("OTEL_LOGS_EXPORTER") or "otlp").split(",")}
+    if unknown := names - {"otlp", "console", "none"}:
+        logger.warning("pensero-litellm: unknown OTEL_LOGS_EXPORTER value %s", ", ".join(sorted(unknown)))
+    exporters: list[LogExporter] = []
+    if "console" in names:
+        exporters.append(ConsoleExporter(out=sys.stdout))
+    if "otlp" in names:
+        exporters.append(JsonLogExporter() if _env("PROTOCOL") == "http/json" else OTLPLogExporter())
+    return exporters

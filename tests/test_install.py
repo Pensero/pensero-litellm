@@ -59,22 +59,30 @@ def test_env_file_replaces_only_its_keys(tmp_path):
 
 
 def test_pensero_endpoint_asks_only_for_the_token(monkeypatch):
-    args = install.argparse.Namespace(endpoint=None, token=None, headers=None)
+    args = install.argparse.Namespace(endpoint=None, token=None, headers=None, debug=False)
     answers = iter(["", "tok:secret"])
     monkeypatch.setattr(install, "ask", lambda *a, **k: next(answers) or a[1])
     assert install.otel_settings(args) == {
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://app.pensero.ai/otel",
         "OTEL_EXPORTER_OTLP_HEADERS": "Authorization=Bearer tok:secret",
         "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
+        "OTEL_LOGS_EXPORTER": "otlp",
     }
 
 
 def test_other_endpoint_asks_for_headers(monkeypatch):
-    args = install.argparse.Namespace(endpoint="https://collector:4318", token=None, headers="x-key=1")
+    args = install.argparse.Namespace(endpoint="https://collector:4318", token=None, headers="x-key=1", debug=False)
     assert install.otel_settings(args) == {
         "OTEL_EXPORTER_OTLP_ENDPOINT": "https://collector:4318",
         "OTEL_EXPORTER_OTLP_HEADERS": "x-key=1",
+        "OTEL_LOGS_EXPORTER": "otlp",
     }
+
+
+def test_debug_prints_and_asks_nothing(monkeypatch):
+    monkeypatch.setattr(install, "ask", lambda *a, **k: pytest.fail("asked"))
+    args = install.argparse.Namespace(endpoint=None, token=None, headers=None, debug=True)
+    assert install.otel_settings(args) == {"OTEL_LOGS_EXPORTER": "console"}
 
 
 def test_finds_the_host_path_of_the_config():
